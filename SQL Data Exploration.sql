@@ -118,8 +118,9 @@ ORDER BY dea.date) AS RollingPeopleVaccinated
 FROM PortfolioProject..CovidDeaths AS dea
 JOIN PortfolioProject..CovidVaccinations AS vac
 ON dea.location = vac.location AND dea.date = vac.date
---WHERE dea.continent IS NOT NULL
---ORDER BY 2,3
+
+SELECT *, (RollingPeopleVaccinated/Population)* 100 AS PercentVaccinated
+FROM #PercentPopulationVaccinated;
 
 
 -- Creating View to store data for later visualizations
