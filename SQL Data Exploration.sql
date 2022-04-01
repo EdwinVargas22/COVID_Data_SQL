@@ -133,4 +133,13 @@ From PortfolioProject..CovidDeaths dea
 Join PortfolioProject..CovidVaccinations vac
 	On dea.location = vac.location
 	and dea.date = vac.date
-where dea.continent is not null 
+where dea.continent is not null
+
+
+SELECT dea.location, dea.population, MAX(vac.people_fully_vaccinated) AS TotalPeopleVacc, MAX(vac.gdp_per_capita) AS GDP_Per_Capita, (MAX(vac.people_fully_vaccinated)/dea.population)*100 
+FROM PortfolioProject..CovidDeaths AS dea
+JOIN PortfolioProject..CovidVaccinations AS vac
+ON dea.location = vac.location
+WHERE dea.continent IS NOT NULL AND vac.gdp_per_capita IS NOT NULL AND vac.total_vaccinations IS NOT NULL
+GROUP BY dea.location, dea.population
+ORDER BY GDP_Per_Capita DESC;
