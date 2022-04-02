@@ -24,7 +24,7 @@ ORDER BY 1,2;
 
 SELECT Location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 AS DeathPercentage
 FROM PortfolioProject..CovidDeaths
-WHERE Location LIKE '%states%' AND continent IS NOT NULL
+WHERE continent IS NOT NULL
 ORDER BY 1,2;
 
 
@@ -33,12 +33,13 @@ ORDER BY 1,2;
 
 SELECT Location, date, Population, total_cases, (total_cases/Population)*100 AS PercentPopulationInfected
 FROM PortfolioProject..CovidDeaths
-WHERE Location LIKE '%states%' AND continent IS NOT NULL
+WHERE continent IS NOT NULL
 ORDER BY 1,2;
 
 -- Countries with Highest Infection Rate compared to Population
 
-SELECT Location, Population, MAX(total_cases) AS HighestInfectionCount, MAX((total_cases/Population))*100 AS PercentPopulationInfected, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
+SELECT Location, Population, MAX(total_cases) AS HighestInfectionCount, MAX((total_cases/Population))*100 AS PercentPopulationInfected
+, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
 FROM PortfolioProject..CovidDeaths
 WHERE continent IS NOT NULL
 GROUP BY Location, Population
@@ -52,12 +53,10 @@ WHERE continent IS NOT NULL
 GROUP BY Location
 ORDER BY TotalDeathCount DESC;
 
-
--- BREAKING THINGS DOWN BY CONTINENT
-
 -- Showing death rate per infected in each continent
 
-SELECT location AS continent, MAX(CAST(Total_deaths AS int)) AS TotalDeathCount, MAX(total_cases) AS TotalInfectedCount, MAX(CAST(Total_deaths AS int))/MAX(total_cases)* 100 AS DeathRatePerInfected, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
+SELECT location AS continent, MAX(CAST(Total_deaths AS int)) AS TotalDeathCount, MAX(total_cases) AS TotalInfectedCount
+, MAX(CAST(Total_deaths AS int))/MAX(total_cases)* 100 AS DeathRatePerInfected, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
 FROM PortfolioProject..CovidDeaths
 WHERE continent IS NULL AND location NOT LIKE '%income' AND location NOT LIKE 'International%' AND location NOT LIKE 'World' AND location NOT LIKE 'European Union'
 GROUP BY location
@@ -65,7 +64,8 @@ ORDER BY DeathRatePerInfected DESC;
 
 -- GLOBAL NUMBERS
 
-SELECT SUM(new_cases) AS total_cases, SUM(CAST(new_deaths AS int)) AS total_deaths, SUM(CAST(new_deaths AS int))/SUM(New_Cases)*100 AS DeathPercentage, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
+SELECT SUM(new_cases) AS total_cases, SUM(CAST(new_deaths AS int)) AS total_deaths, SUM(CAST(new_deaths AS int))/SUM(New_Cases)*100 AS DeathPercentage
+, FORMAT(MAX(date), 'MM-dd-yyyy') AS date
 FROM PortfolioProject..CovidDeaths
 WHERE continent IS NOT NULL
 ORDER BY 1,2;
@@ -135,11 +135,26 @@ Join PortfolioProject..CovidVaccinations vac
 	and dea.date = vac.date
 where dea.continent is not null
 
+-- Showing the top 15 countries with the highest GDP per capita to see if the COVID death rate will be low
 
-SELECT dea.location, dea.population, MAX(vac.people_fully_vaccinated) AS TotalPeopleVacc, MAX(vac.gdp_per_capita) AS GDP_Per_Capita, (MAX(vac.people_fully_vaccinated)/dea.population)*100 
+SELECT TOP 15 dea.location, dea.population, MAX(dea.total_cases) AS total_COVID_cases, MAX(CAST(total_deaths AS int)) AS total_COVID_deaths
+, MAX(CAST(total_deaths AS int))/MAX(dea.total_cases)*100 AS COVID_death_rate_per_infected, MAX(vac.gdp_per_capita) AS GDP_Per_Capita
+, FORMAT(MAX(dea.date), 'MM-dd-yyyy') AS date
 FROM PortfolioProject..CovidDeaths AS dea
 JOIN PortfolioProject..CovidVaccinations AS vac
 ON dea.location = vac.location
-WHERE dea.continent IS NOT NULL AND vac.gdp_per_capita IS NOT NULL AND vac.total_vaccinations IS NOT NULL
+WHERE dea.total_cases IS NOT NULL AND dea.total_deaths IS NOT NULL AND GDP_Per_Capita IS NOT NULL
 GROUP BY dea.location, dea.population
 ORDER BY GDP_Per_Capita DESC;
+
+-- Showing the top 15 countries with the lowest GDP per capita to see if the COVID death rate will be high
+
+SELECT TOP 15 dea.location, dea.population, MAX(dea.total_cases) AS total_COVID_cases, MAX(CAST(total_deaths AS int)) AS total_COVID_deaths
+, MAX(CAST(total_deaths AS int))/MAX(dea.total_cases)*100 AS COVID_death_rate_per_infected, MAX(vac.gdp_per_capita) AS GDP_Per_Capita
+, FORMAT(MAX(dea.date), 'MM-dd-yyyy') AS date
+FROM PortfolioProject..CovidDeaths AS dea
+JOIN PortfolioProject..CovidVaccinations AS vac
+ON dea.location = vac.location
+WHERE dea.total_cases IS NOT NULL AND dea.total_deaths IS NOT NULL AND GDP_Per_Capita IS NOT NULL
+GROUP BY dea.location, dea.population
+ORDER BY GDP_Per_Capita;
